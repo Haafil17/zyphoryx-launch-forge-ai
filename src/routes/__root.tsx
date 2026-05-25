@@ -78,9 +78,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Names, branding, marketing, launch strategies, websites and startup ideas generated instantly with AI." },
       { name: "author", content: "LaunchForge AI" },
       { property: "og:title", content: "LaunchForge AI — Build Your Entire Business With AI" },
-      { property: "og:description", content: "The all-in-one AI Business Builder. Generate names, branding, marketing, websites and launch plans in seconds." },
+      { property: "og:description", content: "Names, branding, marketing, launch strategies, websites and startup ideas generated instantly with AI." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "LaunchForge AI — Build Your Entire Business With AI" },
+      { name: "twitter:description", content: "Names, branding, marketing, launch strategies, websites and startup ideas generated instantly with AI." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/o2Fk4DUNBOV5lbCyEOdkC8oD2923/social-images/social-1779709369852-Zyphoryx_AI_Lab-Logo.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/o2Fk4DUNBOV5lbCyEOdkC8oD2923/social-images/social-1779709369852-Zyphoryx_AI_Lab-Logo.webp" },
     ],
     links: [
       {
