@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { generateWithTool, chatWithBusinessAi } from "@/lib/ai.functions";
+import { generateWithTool, chatWithBusinessAi, generateLogoImages } from "@/lib/ai.functions";
 import { TOOLS, TOOLS_BY_ID, AGENTS, TOOL_ICONS, type AiTool } from "@/lib/ai-tools";
 import { toast } from "sonner";
 import {
@@ -233,27 +233,42 @@ function ToolsGrid({ onSelect }: { onSelect: (id: string) => void }) {
 function ToolWorkspace({ tool, onBack }: { tool: AiTool; onBack: () => void }) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [output, setOutput] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const gen = useServerFn(generateWithTool);
+  const genLogo = useServerFn(generateLogoImages);
   const Icon = tool.icon;
 
   const run = async () => {
-    setLoading(true); setOutput("");
+    setLoading(true); setOutput(""); setImages([]);
     try {
-      const res = await gen({ data: { toolId: tool.id, inputs: values } });
-      setOutput(res.text);
+      if (tool.kind === "image") {
+        const res = await genLogo({
+          data: {
+            brand: values.brand ?? "",
+            industry: values.industry ?? "",
+            style: values.style ?? "Modern",
+            colors: values.colors ?? "",
+            count: 4,
+          },
+        });
+        setImages(res.images);
+      } else {
+        const res = await gen({ data: { toolId: tool.id, inputs: values } });
+        setOutput(res.text);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Generation failed");
     } finally { setLoading(false); }
   };
 
   const save = async () => {
-    if (!output) return;
+    if (!output && images.length === 0) return;
     const { error } = await supabase.from("saved_projects").insert({
       title: (values[tool.fields[0]?.name as string] ?? tool.name).slice(0, 80),
       tool: tool.id,
       input: values,
-      output,
+      output: output || `[${images.length} logo image(s)]`,
       user_id: (await supabase.auth.getUser()).data.user!.id,
     });
     if (error) return toast.error(error.message);
@@ -304,6 +319,21 @@ function ToolWorkspace({ tool, onBack }: { tool: AiTool; onBack: () => void }) {
             <div className="h-4 w-1/2 rounded shimmer bg-white/5" />
             <div className="h-4 w-3/4 rounded shimmer bg-white/5" />
           </div>
+        ) : images.length > 0 ? (
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">AI Logos</div>
+              <Button size="sm" onClick={save}><Save className="mr-1 h-3.5 w-3.5" /> Save</Button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {images.map((src, i) => (
+                <a key={i} href={src} download={`${values.brand || "logo"}-${i + 1}.png`} className="group relative overflow-hidden rounded-xl border border-white/10 bg-white">
+                  <img src={src} alt={`Logo concept ${i + 1}`} className="aspect-square w-full object-contain" />
+                  <div className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-1.5 text-center text-xs text-white opacity-0 transition group-hover:opacity-100">Download</div>
+                </a>
+              ))}
+            </div>
+          </>
         ) : output ? (
           <>
             <div className="mb-4 flex items-center justify-between">

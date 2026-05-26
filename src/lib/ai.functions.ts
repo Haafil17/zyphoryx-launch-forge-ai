@@ -64,3 +64,51 @@ export const chatWithBusinessAi = createServerFn({ method: "POST" })
     });
     return { text: result.text };
   });
+
+const LogoInput = z.object({
+  brand: z.string().min(1).max(80),
+  industry: z.string().max(200).optional().default(""),
+  style: z.string().max(80).optional().default("Modern"),
+  colors: z.string().max(200).optional().default(""),
+  count: z.number().int().min(1).max(4).optional().default(4),
+});
+
+export const generateLogoImages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => LogoInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: prof } = await context.supabase
+      .from("profiles").select("is_blocked").eq("id", context.userId).single();
+    if (prof?.is_blocked) throw new Error("Your account is blocked.");
+
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("Missing LOVABLE_API_KEY");
+
+    const prompt = `Professional logo for "${data.brand}". Industry: ${data.industry || "general"}. Style: ${data.style}. ${data.colors ? `Color direction: ${data.colors}.` : ""} Clean vector-style logo, centered on a pure solid white background, high contrast, memorable mark, no text artifacts, no watermark. Modern startup branding quality.`;
+
+    const runOne = async () => {
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Lovable-API-Key": key,
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3.1-flash-image-preview",
+          messages: [{ role: "user", content: prompt }],
+          modalities: ["image", "text"],
+        }),
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(`Image gen failed (${res.status}): ${t.slice(0, 200)}`);
+      }
+      const json = await res.json() as { choices?: Array<{ message?: { images?: Array<{ image_url?: { url?: string } }> } }> };
+      const url = json.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+      if (!url) throw new Error("No image returned");
+      return url;
+    };
+
+    const images = await Promise.all(Array.from({ length: data.count }, () => runOne()));
+    return { images };
+  });

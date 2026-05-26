@@ -19,6 +19,7 @@ export type AiTool = {
   system: string;
   fields: ToolField[];
   cta?: string;
+  kind?: "text" | "image";
 };
 
 export const TOOLS: AiTool[] = [
@@ -103,6 +104,23 @@ export const TOOLS: AiTool[] = [
       { name: "brand", label: "Brand name", type: "text", required: true },
       { name: "industry", label: "Industry", type: "text", required: true },
       { name: "style", label: "Logo style", type: "select", options: ["Wordmark", "Lettermark", "Iconic", "Abstract", "Mascot", "Futuristic"] },
+    ],
+  },
+  {
+    id: "logo-image",
+    name: "AI Logo Generator",
+    tagline: "Generate real logo images with AI",
+    icon: Image,
+    color: "from-fuchsia-500 to-cyan-500",
+    category: "Branding",
+    cta: "Generate Logos",
+    kind: "image",
+    system: "",
+    fields: [
+      { name: "brand", label: "Brand name", type: "text", required: true },
+      { name: "industry", label: "Industry / description", type: "text", required: true, placeholder: "AI SaaS for founders" },
+      { name: "style", label: "Style", type: "select", options: ["Modern", "Minimal", "Futuristic", "Luxury", "Playful", "Bold", "Geometric", "Hand-drawn"] },
+      { name: "colors", label: "Color direction (optional)", type: "text", placeholder: "neon purple + cyan gradient" },
     ],
   },
   {
