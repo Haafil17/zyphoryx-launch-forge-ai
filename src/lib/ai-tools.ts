@@ -32,10 +32,10 @@ export const TOOLS: AiTool[] = [
     category: "Ideas",
     cta: "Generate Ideas",
     system:
-      "You are a startup advisor. Generate 5 concrete business ideas tailored to the user's inputs. For each idea include: name, 1-line pitch, difficulty (Easy/Medium/Hard), earning potential ($/mo range), scalability (Low/Medium/High), and a 5-step startup roadmap. Use clean markdown with H3 headings.",
+      "You are a startup advisor. Generate 5 concrete business ideas tailored to the user's inputs. For each idea include: name, 1-line pitch, difficulty (Easy/Medium/Hard), earning potential (PKR/mo range, use ₨ symbol), scalability (Low/Medium/High), and a 5-step startup roadmap. Use clean markdown with H3 headings. All monetary values must be in Pakistani Rupees (PKR, ₨).",
     fields: [
       { name: "interests", label: "Your interests / skills", type: "text", placeholder: "e.g. fitness, AI, coffee", required: true },
-      { name: "budget", label: "Starting budget (USD)", type: "select", options: ["< $500", "$500 - $5k", "$5k - $25k", "$25k+"], required: true },
+      { name: "budget", label: "Starting budget (PKR)", type: "select", options: ["< ₨50,000", "₨50,000 - ₨500,000", "₨500,000 - ₨2,500,000", "₨2,500,000+"], required: true },
       { name: "businessType", label: "Business type", type: "select", options: ["Online / SaaS", "Local / Physical", "E-commerce", "Agency / Service", "Content / Creator", "Anything"], required: true },
       { name: "audience", label: "Target audience", type: "text", placeholder: "Gen Z, busy moms, B2B SaaS founders…" },
       { name: "location", label: "Country / City", type: "text", placeholder: "Karachi, NYC, Global" },
@@ -184,7 +184,7 @@ export const TOOLS: AiTool[] = [
       { name: "business", label: "Business name", type: "text", required: true },
       { name: "type", label: "Type", type: "text", placeholder: "café, restaurant, store…", required: true },
       { name: "cuisine", label: "Cuisine / niche", type: "text" },
-      { name: "currency", label: "Currency", type: "select", options: ["USD", "EUR", "GBP", "PKR", "INR", "AED"] },
+      { name: "currency", label: "Currency", type: "select", options: ["PKR", "INR", "USD", "EUR", "GBP", "AED"] },
     ],
   },
   {
