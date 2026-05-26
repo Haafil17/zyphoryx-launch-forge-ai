@@ -211,11 +211,11 @@ export const TOOLS: AiTool[] = [
     category: "Strategy",
     cta: "Generate Plan",
     system:
-      "Produce a startup financial plan. Sections: Startup cost breakdown (table), recommended pricing strategy, expected profit margins, break-even analysis, and 3 growth/monetization ideas. Use markdown tables where useful.",
+      "Produce a startup financial plan in Pakistani Rupees (PKR, ₨). All monetary values must use ₨ and PKR — never USD/$. Sections: Startup cost breakdown (table), recommended pricing strategy, expected profit margins, break-even analysis, and 3 growth/monetization ideas. Use markdown tables where useful.",
     fields: [
       { name: "business", label: "Business description", type: "textarea", required: true },
-      { name: "budget", label: "Starting budget", type: "text", required: true },
-      { name: "country", label: "Country", type: "text" },
+      { name: "budget", label: "Starting budget (PKR ₨)", type: "text", required: true, placeholder: "e.g. ₨500,000" },
+      { name: "country", label: "Country", type: "text", placeholder: "Pakistan" },
     ],
   },
   {
