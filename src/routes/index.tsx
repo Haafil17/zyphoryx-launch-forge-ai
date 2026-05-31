@@ -1,20 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/Logo";
 import { AuroraBg } from "@/components/brand/AuroraBg";
 import { TOOLS, AGENTS, TOOL_ICONS } from "@/lib/ai-tools";
 import {
   ArrowRight, Check, Sparkles, Zap, Shield, Star,
-  ChevronDown, Rocket, Brain, Workflow,
+  ChevronDown, Rocket, Brain, Workflow, Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/")({
   component: Landing,
 });
 
 function Landing() {
+  const { user, loading } = useAuth();
+  const nav = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !user) nav({ to: "/auth" });
+  }, [loading, user, nav]);
+
+  if (loading || !user) {
+    return (
+      <div className="relative grid min-h-screen place-items-center">
+        <AuroraBg />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <AuroraBg />
