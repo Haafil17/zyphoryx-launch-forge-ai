@@ -4,9 +4,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-type AuthContext = { supabase: ReturnType<typeof import("@supabase/supabase-js").createClient>; userId: string };
 async function assertAdmin(context: unknown) {
-  const ctx = context as AuthContext;
+  const ctx = context as { supabase: { rpc: (fn: string, args: unknown) => Promise<{ data: unknown }> }; userId: string };
   const { data } = await ctx.supabase.rpc("has_role", { _user_id: ctx.userId, _role: "admin" });
   if (!data) throw new Error("Forbidden: admin access required.");
 }
