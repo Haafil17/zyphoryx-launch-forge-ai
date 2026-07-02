@@ -14,12 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { generateWithTool, chatWithBusinessAi, generateLogoImages } from "@/lib/ai.functions";
+import { createApiKey, listApiKeys, setApiKeyActive, deleteApiKey } from "@/lib/api-keys.functions";
 import { TOOLS, TOOLS_BY_ID, AGENTS, TOOL_ICONS, type AiTool } from "@/lib/ai-tools";
 import { toast } from "sonner";
 import {
   LayoutDashboard, Wand2, FolderOpen, BarChart3, Settings, HelpCircle,
   MessageSquare, Shield, LogOut, Loader2, Save, Trash2, Sparkles, Send,
-  TrendingUp, Users, Zap, ArrowRight, Search,
+  TrendingUp, Users, Zap, ArrowRight, Search, KeyRound, Copy, Code2,
 } from "lucide-react";
 
 type View = "home" | "tools" | "tool" | "chat" | "projects" | "analytics" | "settings" | "admin";
