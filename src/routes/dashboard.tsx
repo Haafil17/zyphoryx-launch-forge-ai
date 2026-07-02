@@ -591,6 +591,7 @@ function AdminView() {
           </tbody>
         </table>
       </div>
+      <ApiKeysSection />
     </div>
   );
 }
