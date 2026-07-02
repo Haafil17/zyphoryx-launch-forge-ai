@@ -14,12 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { generateWithTool, chatWithBusinessAi, generateLogoImages } from "@/lib/ai.functions";
+import { createApiKey, listApiKeys, setApiKeyActive, deleteApiKey } from "@/lib/api-keys.functions";
 import { TOOLS, TOOLS_BY_ID, AGENTS, TOOL_ICONS, type AiTool } from "@/lib/ai-tools";
 import { toast } from "sonner";
 import {
   LayoutDashboard, Wand2, FolderOpen, BarChart3, Settings, HelpCircle,
   MessageSquare, Shield, LogOut, Loader2, Save, Trash2, Sparkles, Send,
-  TrendingUp, Users, Zap, ArrowRight, Search,
+  TrendingUp, Users, Zap, ArrowRight, Search, KeyRound, Copy, Code2,
 } from "lucide-react";
 
 type View = "home" | "tools" | "tool" | "chat" | "projects" | "analytics" | "settings" | "admin";
@@ -590,6 +591,7 @@ function AdminView() {
           </tbody>
         </table>
       </div>
+      <ApiKeysSection />
     </div>
   );
 }
@@ -603,3 +605,112 @@ function Stat({ label, value, icon: Icon }: { label: string; value: number; icon
 }
 
 export const __keepIcons = TOOL_ICONS;
+
+// ---------- API KEYS (admin only) ----------
+type ApiKeyRow = { id: string; name: string; key_prefix: string; is_active: boolean; last_used_at: string | null; request_count: number; created_at: string };
+function ApiKeysSection() {
+  const [keys, setKeys] = useState<ApiKeyRow[]>([]);
+  const [name, setName] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [newKey, setNewKey] = useState<string | null>(null);
+  const create = useServerFn(createApiKey);
+  const list = useServerFn(listApiKeys);
+  const setActive = useServerFn(setApiKeyActive);
+  const del = useServerFn(deleteApiKey);
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+
+  const load = async () => {
+    try { const res = await list(); setKeys(res.keys as ApiKeyRow[]); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Failed to load keys"); }
+  };
+  useEffect(() => { void load(); }, []);
+
+  const onCreate = async () => {
+    if (!name.trim()) return;
+    setCreating(true);
+    try {
+      const res = await create({ data: { name: name.trim() } });
+      setNewKey(res.key);
+      setName("");
+      await load();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed"); }
+    finally { setCreating(false); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 pt-2">
+        <KeyRound className="h-5 w-5 text-cyan-400" />
+        <h2 className="text-xl font-semibold tracking-tight">Public API Keys</h2>
+      </div>
+      <p className="text-sm text-muted-foreground">Generate keys so other websites can use every LaunchForge AI feature over HTTP.</p>
+
+      <div className="rounded-2xl glass p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <Label>Key name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. My marketing site" className="mt-1.5 glass border-white/10" />
+          </div>
+          <Button onClick={onCreate} disabled={creating || !name.trim()} className="gradient-bg text-white">
+            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <><KeyRound className="mr-1.5 h-4 w-4" /> Generate key</>}
+          </Button>
+        </div>
+        {newKey && (
+          <div className="mt-4 rounded-xl border border-cyan-400/30 bg-cyan-400/5 p-4">
+            <div className="text-xs text-cyan-300">Copy this key now — it won't be shown again.</div>
+            <div className="mt-2 flex items-center gap-2">
+              <code className="flex-1 truncate rounded bg-black/40 px-3 py-2 text-sm">{newKey}</code>
+              <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(newKey); toast.success("Copied"); }}><Copy className="h-3.5 w-3.5" /></Button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {keys.length > 0 && (
+        <div className="overflow-hidden rounded-2xl glass">
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs text-muted-foreground">
+              <tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Key</th><th className="px-4 py-3">Requests</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr>
+            </thead>
+            <tbody>
+              {keys.map((k) => (
+                <tr key={k.id} className="border-t border-white/5">
+                  <td className="px-4 py-3 font-medium">{k.name}</td>
+                  <td className="px-4 py-3"><code className="text-xs text-muted-foreground">{k.key_prefix}…</code></td>
+                  <td className="px-4 py-3">{k.request_count}</td>
+                  <td className="px-4 py-3">{k.is_active ? <Badge variant="outline" className="text-emerald-400">Active</Badge> : <Badge variant="destructive">Revoked</Badge>}</td>
+                  <td className="px-4 py-3 text-right space-x-2">
+                    <Button size="sm" variant="outline" onClick={async () => { await setActive({ data: { id: k.id, active: !k.is_active } }); void load(); }}>{k.is_active ? "Revoke" : "Enable"}</Button>
+                    <Button size="sm" variant="destructive" onClick={async () => { await del({ data: { id: k.id } }); void load(); toast.success("Deleted"); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="rounded-2xl glass p-5">
+        <div className="flex items-center gap-2"><Code2 className="h-4 w-4 text-fuchsia-400" /><div className="text-sm font-medium">How to use the API</div></div>
+        <p className="mt-2 text-xs text-muted-foreground">Base URL: <code className="rounded bg-black/40 px-1.5 py-0.5">{baseUrl}/api/public/v1</code></p>
+        <pre className="mt-3 overflow-x-auto rounded-xl bg-black/40 p-4 text-xs leading-relaxed">{`# List all tools
+curl ${baseUrl}/api/public/v1/tools -H "Authorization: Bearer YOUR_KEY"
+
+# Run any text tool
+curl -X POST ${baseUrl}/api/public/v1/generate \\
+  -H "Authorization: Bearer YOUR_KEY" -H "Content-Type: application/json" \\
+  -d '{"toolId":"idea","inputs":{"Industry":"Coffee"}}'
+
+# Chat with the AI advisor
+curl -X POST ${baseUrl}/api/public/v1/chat \\
+  -H "Authorization: Bearer YOUR_KEY" -H "Content-Type: application/json" \\
+  -d '{"messages":[{"role":"user","content":"How do I price my SaaS?"}]}'
+
+# Generate logos
+curl -X POST ${baseUrl}/api/public/v1/logo \\
+  -H "Authorization: Bearer YOUR_KEY" -H "Content-Type: application/json" \\
+  -d '{"brand":"NovaBrew","style":"Modern","count":4}'`}</pre>
+      </div>
+    </div>
+  );
+}
