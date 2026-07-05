@@ -37,11 +37,9 @@ function Landing() {
       <AuroraBg />
       <Nav />
       <Hero />
-      <LogoRow />
       <Features />
       <AgentsSection />
       <ShowcaseSection />
-      <Testimonials />
       <Pricing />
       <FAQ />
       <Footer />
