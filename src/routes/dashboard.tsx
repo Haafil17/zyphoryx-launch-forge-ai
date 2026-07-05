@@ -23,6 +23,8 @@ import {
   TrendingUp, Users, Zap, ArrowRight, Search, KeyRound, Copy, Code2,
 } from "lucide-react";
 
+import { listAllPlans, createPlan, updatePlan, deletePlan } from "@/lib/plans.functions";
+
 type View = "home" | "tools" | "tool" | "chat" | "projects" | "analytics" | "settings" | "admin";
 
 export const Route = createFileRoute("/dashboard")({ component: Dash });
