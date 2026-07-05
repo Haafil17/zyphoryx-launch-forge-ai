@@ -327,7 +327,7 @@ function FAQ() {
     { q: "Do I need to know how to build a startup?", a: "No. The platform walks you from idea to launch with AI agents handling branding, marketing, finance and strategy." },
     { q: "Can I save and edit generations?", a: "Yes. Every output is saved to your private workspace and you can edit or re-generate any of it." },
     { q: "Which AI models do you use?", a: "A mix of frontier reasoning and creative models, automatically selected for each task." },
-    { q: "Is there a free plan?", a: "Yes — 5 free generations with no credit card required." },
+    { q: "How much does it cost?", a: "One simple plan gives you full access to every AI tool for the whole month — see the pricing section above." },
   ];
   const [open, setOpen] = useState<number | null>(0);
   return (
