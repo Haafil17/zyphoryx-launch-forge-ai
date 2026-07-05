@@ -593,6 +593,7 @@ function AdminView() {
           </tbody>
         </table>
       </div>
+      <PlansSection />
       <ApiKeysSection />
     </div>
   );
