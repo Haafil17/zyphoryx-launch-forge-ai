@@ -5,7 +5,7 @@ import { Logo } from "@/components/brand/Logo";
 import { AuroraBg } from "@/components/brand/AuroraBg";
 import { TOOLS, AGENTS, TOOL_ICONS } from "@/lib/ai-tools";
 import {
-  ArrowRight, Check, Sparkles, Zap, Shield, Star,
+  ArrowRight, Check, Sparkles, Zap, Shield,
   ChevronDown, Rocket, Brain, Workflow, Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
