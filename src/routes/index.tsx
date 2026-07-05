@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { listPublicPlans } from "@/lib/plans.functions";
 
 export const Route = createFileRoute("/")({
   component: Landing,
