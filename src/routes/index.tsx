@@ -5,11 +5,12 @@ import { Logo } from "@/components/brand/Logo";
 import { AuroraBg } from "@/components/brand/AuroraBg";
 import { TOOLS, AGENTS, TOOL_ICONS } from "@/lib/ai-tools";
 import {
-  ArrowRight, Check, Sparkles, Zap, Shield, Star,
+  ArrowRight, Check, Sparkles, Zap, Shield,
   ChevronDown, Rocket, Brain, Workflow, Loader2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { listPublicPlans } from "@/lib/plans.functions";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -37,11 +38,9 @@ function Landing() {
       <AuroraBg />
       <Nav />
       <Hero />
-      <LogoRow />
       <Features />
       <AgentsSection />
       <ShowcaseSection />
-      <Testimonials />
       <Pricing />
       <FAQ />
       <Footer />
@@ -151,19 +150,6 @@ function DashboardMock() {
         </div>
       </div>
     </div>
-  );
-}
-
-function LogoRow() {
-  return (
-    <section className="mx-auto max-w-6xl px-4 pb-12">
-      <div className="text-center text-xs uppercase tracking-widest text-muted-foreground">Trusted by founders building the next big thing</div>
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 opacity-70">
-        {["NEXUS", "Stellar Labs", "Quantum.io", "Orbit", "Atlas AI", "Forge & Co"].map((b) => (
-          <span key={b} className="text-lg font-semibold tracking-tight text-muted-foreground">{b}</span>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -287,61 +273,49 @@ function ShowcaseSection() {
   );
 }
 
-function Testimonials() {
-  const items = [
-    { q: "Felt like hiring a 5-person agency for $0. We launched in 9 days.", a: "Maya R.", r: "Founder, Lumen Skincare" },
-    { q: "The Marketing Agent alone is worth the subscription.", a: "Daniel K.", r: "Indie SaaS Founder" },
-    { q: "Used the Idea + Roadmap tools to validate, then shipped my MVP.", a: "Priya S.", r: "Builder" },
-    { q: "Best onboarding I've seen in an AI product. Stupidly fast.", a: "Omar A.", r: "E-commerce" },
-  ];
-  return (
-    <section className="mx-auto max-w-6xl px-4 py-24">
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-4xl font-semibold tracking-tight">Loved by builders</h2>
-        <p className="mt-3 text-muted-foreground">From first-time founders to repeat operators.</p>
-      </div>
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map((t) => (
-          <div key={t.a} className="rounded-2xl glass p-5">
-            <div className="flex text-amber-400">{Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-current" />)}</div>
-            <p className="mt-3 text-sm">{t.q}</p>
-            <div className="mt-4 text-xs text-muted-foreground">{t.a} · {t.r}</div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function Pricing() {
-  const tiers = [
-    { name: "Starter", price: "$0", desc: "Try every AI tool", cta: "Start free", features: ["5 generations / month", "All AI tools", "Save up to 3 projects"] },
-    { name: "Pro", price: "$19", desc: "For serious builders", popular: true, cta: "Start Pro", features: ["Unlimited generations", "Unlimited saved projects", "AI chatbot advisor", "PDF export"] },
-    { name: "Studio", price: "$49", desc: "Agencies & teams", cta: "Talk to us", features: ["Everything in Pro", "Team workspace", "Brand kit exports", "Priority models"] },
-  ];
+  const [plans, setPlans] = useState<Array<{ id: string; name: string; price_inr: number; interval: string; description: string; features: string[]; highlighted: boolean }>>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    listPublicPlans()
+      .then((r) => setPlans((r.plans as never) ?? []))
+      .catch(() => setPlans([]))
+      .finally(() => setLoaded(true));
+  }, []);
+
   return (
     <section id="pricing" className="mx-auto max-w-6xl px-4 py-24">
       <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-4xl font-semibold tracking-tight">Simple pricing for fast builders</h2>
-        <p className="mt-3 text-muted-foreground">Start free. Upgrade when you're ready to launch.</p>
+        <h2 className="text-4xl font-semibold tracking-tight">One simple plan</h2>
+        <p className="mt-3 text-muted-foreground">Full access to every AI tool for the whole month. No tiers, no add-ons.</p>
       </div>
-      <div className="mt-12 grid gap-5 lg:grid-cols-3">
-        {tiers.map((t) => (
-          <div key={t.name} className={`relative rounded-2xl ${t.popular ? "glass-strong glow" : "glass"} p-7`}>
-            {t.popular && <div className="absolute -top-3 left-7 rounded-full gradient-bg px-3 py-0.5 text-xs font-medium text-white">Most popular</div>}
-            <div className="text-sm text-muted-foreground">{t.name}</div>
-            <div className="mt-2 flex items-baseline gap-1"><span className="text-4xl font-semibold">{t.price}</span><span className="text-sm text-muted-foreground">/mo</span></div>
-            <div className="mt-1 text-sm text-muted-foreground">{t.desc}</div>
-            <ul className="mt-6 space-y-2 text-sm">
-              {t.features.map((f) => <li key={f} className="flex items-center gap-2"><Check className="h-4 w-4 text-emerald-400" /> {f}</li>)}
-            </ul>
-            <Link to="/auth" search={{ mode: "signup" } as never} className="mt-7 block">
-              <Button className={`w-full ${t.popular ? "gradient-bg text-white" : ""}`} variant={t.popular ? "default" : "outline"}>
-                {t.cta}
-              </Button>
-            </Link>
+      <div className="mt-12 flex justify-center">
+        {!loaded ? (
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        ) : plans.length === 0 ? (
+          <div className="rounded-2xl glass p-7 text-center text-muted-foreground">No plans available yet.</div>
+        ) : (
+          <div className="grid w-full max-w-md gap-5">
+            {plans.map((t) => (
+              <div key={t.id} className={`relative rounded-2xl ${t.highlighted ? "glass-strong glow" : "glass"} p-8`}>
+                {t.highlighted && <div className="absolute -top-3 left-8 rounded-full gradient-bg px-3 py-0.5 text-xs font-medium text-white">Full access</div>}
+                <div className="text-sm text-muted-foreground">{t.name}</div>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-4xl font-semibold">₹{t.price_inr.toLocaleString("en-IN")}</span>
+                  <span className="text-sm text-muted-foreground">/{t.interval}</span>
+                </div>
+                <div className="mt-1 text-sm text-muted-foreground">{t.description}</div>
+                <ul className="mt-6 space-y-2 text-sm">
+                  {(t.features ?? []).map((f) => <li key={f} className="flex items-center gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" /> {f}</li>)}
+                </ul>
+                <Link to="/auth" search={{ mode: "signup" } as never} className="mt-7 block">
+                  <Button className="w-full gradient-bg text-white">Get started</Button>
+                </Link>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
     </section>
   );
@@ -353,7 +327,7 @@ function FAQ() {
     { q: "Do I need to know how to build a startup?", a: "No. The platform walks you from idea to launch with AI agents handling branding, marketing, finance and strategy." },
     { q: "Can I save and edit generations?", a: "Yes. Every output is saved to your private workspace and you can edit or re-generate any of it." },
     { q: "Which AI models do you use?", a: "A mix of frontier reasoning and creative models, automatically selected for each task." },
-    { q: "Is there a free plan?", a: "Yes — 5 free generations with no credit card required." },
+    { q: "How much does it cost?", a: "One simple plan gives you full access to every AI tool for the whole month — see the pricing section above." },
   ];
   const [open, setOpen] = useState<number | null>(0);
   return (

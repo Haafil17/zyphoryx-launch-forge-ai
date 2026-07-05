@@ -50,6 +50,48 @@ export type Database = {
         }
         Relationships: []
       }
+      plans: {
+        Row: {
+          created_at: string
+          description: string
+          features: Json
+          highlighted: boolean
+          id: string
+          interval: string
+          is_active: boolean
+          name: string
+          price_inr: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          features?: Json
+          highlighted?: boolean
+          id?: string
+          interval?: string
+          is_active?: boolean
+          name: string
+          price_inr?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          features?: Json
+          highlighted?: boolean
+          id?: string
+          interval?: string
+          is_active?: boolean
+          name?: string
+          price_inr?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
