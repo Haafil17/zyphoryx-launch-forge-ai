@@ -717,3 +717,135 @@ curl -X POST ${baseUrl}/api/public/v1/logo \\
     </div>
   );
 }
+// ---------- PLANS (admin only) ----------
+type PlanRow = { id: string; name: string; price_inr: number; interval: string; description: string; features: string[]; is_active: boolean; highlighted: boolean; sort_order: number };
+type PlanDraft = { name: string; price_inr: number; interval: string; description: string; features: string; is_active: boolean; highlighted: boolean; sort_order: number };
+
+const emptyDraft: PlanDraft = { name: "", price_inr: 999, interval: "month", description: "", features: "", is_active: true, highlighted: true, sort_order: 0 };
+
+function PlansSection() {
+  const [plans, setPlans] = useState<PlanRow[]>([]);
+  const [draft, setDraft] = useState<PlanDraft>(emptyDraft);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const list = useServerFn(listAllPlans);
+  const create = useServerFn(createPlan);
+  const update = useServerFn(updatePlan);
+  const del = useServerFn(deletePlan);
+
+  const load = async () => {
+    try { const res = await list(); setPlans(res.plans as PlanRow[]); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Failed to load plans"); }
+  };
+  useEffect(() => { void load(); }, []);
+
+  const reset = () => { setDraft(emptyDraft); setEditingId(null); };
+
+  const startEdit = (p: PlanRow) => {
+    setEditingId(p.id);
+    setDraft({
+      name: p.name, price_inr: p.price_inr, interval: p.interval, description: p.description,
+      features: (p.features ?? []).join("\n"), is_active: p.is_active, highlighted: p.highlighted, sort_order: p.sort_order,
+    });
+  };
+
+  const save = async () => {
+    if (!draft.name.trim()) { toast.error("Plan name is required"); return; }
+    setSaving(true);
+    const payload = {
+      name: draft.name.trim(),
+      price_inr: Number(draft.price_inr) || 0,
+      interval: draft.interval.trim() || "month",
+      description: draft.description.trim(),
+      features: draft.features.split("\n").map((f) => f.trim()).filter(Boolean),
+      is_active: draft.is_active,
+      highlighted: draft.highlighted,
+      sort_order: Number(draft.sort_order) || 0,
+    };
+    try {
+      if (editingId) await update({ data: { id: editingId, ...payload } });
+      else await create({ data: payload });
+      toast.success(editingId ? "Plan updated" : "Plan added");
+      reset();
+      await load();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to save"); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <div className="space-y-4 pt-4">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 text-fuchsia-400" />
+        <h2 className="text-xl font-semibold tracking-tight">Pricing Plans</h2>
+      </div>
+      <p className="text-sm text-muted-foreground">Add, edit, or remove the plans shown on the public pricing page. Prices are in INR (₹).</p>
+
+      <div className="rounded-2xl glass p-5 space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <Label>Plan name</Label>
+            <Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Full Access" className="mt-1.5 glass border-white/10" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Price (₹)</Label>
+              <Input type="number" value={draft.price_inr} onChange={(e) => setDraft({ ...draft, price_inr: Number(e.target.value) })} className="mt-1.5 glass border-white/10" />
+            </div>
+            <div>
+              <Label>Interval</Label>
+              <Input value={draft.interval} onChange={(e) => setDraft({ ...draft, interval: e.target.value })} placeholder="month" className="mt-1.5 glass border-white/10" />
+            </div>
+          </div>
+        </div>
+        <div>
+          <Label>Description</Label>
+          <Input value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="Every AI tool, unlimited, for the whole month." className="mt-1.5 glass border-white/10" />
+        </div>
+        <div>
+          <Label>Features (one per line)</Label>
+          <Textarea value={draft.features} onChange={(e) => setDraft({ ...draft, features: e.target.value })} rows={5} placeholder={"Unlimited generations\nBrand strategy & identity\nMarketing & launch planning"} className="mt-1.5 glass border-white/10" />
+        </div>
+        <div className="flex flex-wrap items-center gap-6">
+          <label className="flex items-center gap-2 text-sm"><Switch checked={draft.is_active} onCheckedChange={(v) => setDraft({ ...draft, is_active: v })} /> Active (visible)</label>
+          <label className="flex items-center gap-2 text-sm"><Switch checked={draft.highlighted} onCheckedChange={(v) => setDraft({ ...draft, highlighted: v })} /> Highlighted</label>
+          <div className="flex items-center gap-2 text-sm">
+            <Label className="whitespace-nowrap">Sort order</Label>
+            <Input type="number" value={draft.sort_order} onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) })} className="w-20 glass border-white/10" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={save} disabled={saving} className="gradient-bg text-white">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="mr-1.5 h-4 w-4" /> {editingId ? "Update plan" : "Add plan"}</>}
+          </Button>
+          {editingId && <Button variant="outline" onClick={reset}>Cancel</Button>}
+        </div>
+      </div>
+
+      {plans.length > 0 && (
+        <div className="space-y-3">
+          {plans.map((p) => (
+            <div key={p.id} className="rounded-2xl glass p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{p.name}</span>
+                    {p.highlighted && <Badge className="gradient-bg text-white">Highlighted</Badge>}
+                    {p.is_active ? <Badge variant="outline" className="text-emerald-400">Active</Badge> : <Badge variant="destructive">Hidden</Badge>}
+                  </div>
+                  <div className="mt-1 text-sm text-muted-foreground">₹{p.price_inr.toLocaleString("en-IN")}/{p.interval} · {p.description}</div>
+                  <ul className="mt-2 text-xs text-muted-foreground list-disc pl-5">
+                    {(p.features ?? []).map((f) => <li key={f}>{f}</li>)}
+                  </ul>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <Button size="sm" variant="outline" onClick={() => startEdit(p)}>Edit</Button>
+                  <Button size="sm" variant="destructive" onClick={async () => { if (!confirm("Delete this plan?")) return; await del({ data: { id: p.id } }); toast.success("Deleted"); void load(); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
