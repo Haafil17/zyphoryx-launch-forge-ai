@@ -152,19 +152,6 @@ function DashboardMock() {
   );
 }
 
-function LogoRow() {
-  return (
-    <section className="mx-auto max-w-6xl px-4 pb-12">
-      <div className="text-center text-xs uppercase tracking-widest text-muted-foreground">Trusted by founders building the next big thing</div>
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 opacity-70">
-        {["NEXUS", "Stellar Labs", "Quantum.io", "Orbit", "Atlas AI", "Forge & Co"].map((b) => (
-          <span key={b} className="text-lg font-semibold tracking-tight text-muted-foreground">{b}</span>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function Features() {
   const items = TOOLS.slice(0, 9);
   return (
