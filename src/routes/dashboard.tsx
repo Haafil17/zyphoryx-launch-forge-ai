@@ -21,6 +21,7 @@ import {
   LayoutDashboard, Wand2, FolderOpen, BarChart3, Settings, HelpCircle,
   MessageSquare, Shield, LogOut, Loader2, Save, Trash2, Sparkles, Send,
   TrendingUp, Users, Zap, ArrowRight, Search, KeyRound, Copy, Code2,
+  Rocket, Download,
 } from "lucide-react";
 
 import { listAllPlans, createPlan, updatePlan, deletePlan } from "@/lib/plans.functions";
