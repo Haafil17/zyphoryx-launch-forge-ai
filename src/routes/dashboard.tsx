@@ -24,8 +24,9 @@ import {
 } from "lucide-react";
 
 import { listAllPlans, createPlan, updatePlan, deletePlan } from "@/lib/plans.functions";
+import { buildBrand, BRAND_QUESTIONS } from "@/lib/brand.functions";
 
-type View = "home" | "tools" | "tool" | "chat" | "projects" | "analytics" | "settings" | "admin";
+type View = "home" | "brand" | "tools" | "tool" | "chat" | "projects" | "analytics" | "settings" | "admin";
 
 export const Route = createFileRoute("/dashboard")({ component: Dash });
 
@@ -46,6 +47,7 @@ function Dash() {
 
   const items: { v: View; label: string; icon: typeof LayoutDashboard }[] = [
     { v: "home", label: "Dashboard", icon: LayoutDashboard },
+    { v: "brand", label: "Brand Builder", icon: Rocket },
     { v: "tools", label: "AI Tools", icon: Wand2 },
     { v: "chat", label: "AI Advisor", icon: MessageSquare },
     { v: "projects", label: "Saved Projects", icon: FolderOpen },
@@ -107,6 +109,7 @@ function Dash() {
           </div>
           <div className="px-4 py-6 sm:px-8 sm:py-8">
             {view === "home" && <HomeView go={go} />}
+            {view === "brand" && <BrandBuilder />}
             {view === "tools" && <ToolsGrid onSelect={(id) => go("tool", id)} />}
             {view === "tool" && activeToolId && <ToolWorkspace tool={TOOLS_BY_ID[activeToolId]} onBack={() => go("tools")} />}
             {view === "chat" && <ChatView />}
