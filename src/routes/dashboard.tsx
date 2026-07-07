@@ -165,12 +165,17 @@ function HomeView({ go }: { go: (v: View, toolId?: string) => void }) {
         ))}
       </div>
       <div className="rounded-3xl glass-strong p-6 sm:p-8">
-        <div className="text-xs uppercase tracking-widest text-fuchsia-300">Start fast</div>
-        <h2 className="mt-2 text-2xl font-semibold">Generate a complete business in 60 seconds</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Begin with the idea generator — outputs flow into branding, marketing and roadmap.</p>
-        <Button onClick={() => go("tool", "idea")} className="mt-5 gradient-bg text-white">
-          Generate my business <ArrowRight className="ml-1.5 h-4 w-4" />
-        </Button>
+        <div className="text-xs uppercase tracking-widest text-fuchsia-300">Flagship</div>
+        <h2 className="mt-2 text-2xl font-semibold">Build a launch-ready brand in one flow</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Answer a few questions and the AI creates your strategy, names, visual identity, website copy, guidelines and a Brand Score.</p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Button onClick={() => go("brand")} className="gradient-bg text-white">
+            Open Brand Builder <Rocket className="ml-1.5 h-4 w-4" />
+          </Button>
+          <Button variant="outline" onClick={() => go("tool", "idea")}>
+            Just need an idea <ArrowRight className="ml-1.5 h-4 w-4" />
+          </Button>
+        </div>
       </div>
       <div>
         <h2 className="mb-4 text-lg font-medium">Popular tools</h2>
