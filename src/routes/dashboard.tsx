@@ -367,6 +367,114 @@ function ToolWorkspace({ tool, onBack }: { tool: AiTool; onBack: () => void }) {
 
 // ---------- CHAT ----------
 type Msg = { role: "user" | "assistant"; content: string };
+function BrandBuilder() {
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [output, setOutput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const build = useServerFn(buildBrand);
+
+  const run = async () => {
+    if (!answers.business?.trim() || !answers.customers?.trim()) {
+      return toast.error("Tell us what your business does and who it's for.");
+    }
+    setLoading(true); setOutput("");
+    try {
+      const res = await build({ data: { answers } });
+      setOutput(res.text);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Generation failed");
+    } finally { setLoading(false); }
+  };
+
+  const save = async () => {
+    if (!output) return;
+    const { error } = await supabase.from("saved_projects").insert({
+      title: (answers.business ?? "Brand package").slice(0, 80),
+      tool: "brand-builder",
+      input: answers,
+      output,
+      user_id: (await supabase.auth.getUser()).data.user!.id,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Saved to your projects");
+  };
+
+  const download = () => {
+    const blob = new Blob([output], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${(answers.business || "brand").slice(0, 40)}-brand.md`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[400px,1fr]">
+      <div className="space-y-5">
+        <div className="flex items-start gap-3">
+          <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-cyan-500 text-white shadow-lg">
+            <Rocket className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Brand Builder</h1>
+            <p className="text-sm text-muted-foreground">Answer a few questions → a launch-ready brand package.</p>
+          </div>
+        </div>
+        <div className="space-y-4 rounded-2xl glass p-5">
+          {BRAND_QUESTIONS.map((q) => (
+            <div key={q.name}>
+              <Label>{q.label}{"required" in q && q.required && <span className="text-fuchsia-400"> *</span>}</Label>
+              {q.type === "textarea" ? (
+                <Textarea className="mt-1.5" rows={3} placeholder={"placeholder" in q ? q.placeholder : undefined}
+                  value={answers[q.name] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.name]: e.target.value })} />
+              ) : q.type === "select" ? (
+                <Select value={answers[q.name] ?? ""} onValueChange={(v) => setAnswers({ ...answers, [q.name]: v })}>
+                  <SelectTrigger className="mt-1.5"><SelectValue placeholder="Choose…" /></SelectTrigger>
+                  <SelectContent>{q.options.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                </Select>
+              ) : (
+                <Input className="mt-1.5" placeholder={"placeholder" in q ? q.placeholder : undefined}
+                  value={answers[q.name] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.name]: e.target.value })} />
+              )}
+            </div>
+          ))}
+          <Button onClick={run} disabled={loading} className="w-full gradient-bg text-white">
+            {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Building your brand…</> : <>Build my brand <Sparkles className="ml-1.5 h-4 w-4" /></>}
+          </Button>
+        </div>
+      </div>
+      <div className="min-h-[400px] rounded-2xl glass-strong p-6">
+        {loading ? (
+          <div className="space-y-3">
+            <div className="h-4 w-1/3 rounded shimmer bg-white/5" />
+            <div className="h-4 w-2/3 rounded shimmer bg-white/5" />
+            <div className="h-4 w-1/2 rounded shimmer bg-white/5" />
+            <div className="h-4 w-3/4 rounded shimmer bg-white/5" />
+          </div>
+        ) : output ? (
+          <>
+            <div className="mb-4 flex items-center justify-between">
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">Your Brand Package</div>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(output).then(() => toast.success("Copied"))}><Copy className="mr-1 h-3.5 w-3.5" /> Copy</Button>
+                <Button variant="outline" size="sm" onClick={download}><Download className="mr-1 h-3.5 w-3.5" /> Export</Button>
+                <Button size="sm" onClick={save}><Save className="mr-1 h-3.5 w-3.5" /> Save</Button>
+              </div>
+            </div>
+            <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans">{output}</pre>
+          </>
+        ) : (
+          <div className="grid h-full place-items-center text-center text-sm text-muted-foreground">
+            <div>
+              <Rocket className="mx-auto h-8 w-8 text-fuchsia-400" />
+              <div className="mt-3">Answer the questions to generate strategy, identity, visuals, copy, guidelines & a Brand Score.</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ChatView() {
   const [msgs, setMsgs] = useState<Msg[]>([{ role: "assistant", content: "Hi! I'm your AI startup advisor. Ask me about marketing, pricing, growth — anything." }]);
   const [input, setInput] = useState("");
